@@ -3,28 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller {
     public function register(Request $request) {
         $user = User::create([
-             'email'    => $request->email,
-             'password' => $request->password,
-             'name'     => $request->email, 
-             'email'    => $request->email, 
-             'password' => $request->email, 
-             'firstname' => $request->email, 
-             'lastname' => $request->email, 
-             'mobile'   => $request->email, 
-             'uuid' => $request->email, 
-             'country_code' => $request->email, 
-             'language_code' => $request->email, 
-             'access'   => $request->access
+            'firstname' => $request->firstname, 
+            'lastname' => $request->lastname, 
+            'mobile'   => $request->mobile,
+            'email'    => $request->email,
+            'email_verified_at' => $request->email_verified_at, 
+            'password' => $request->password,
+            'role_id'   => 1,
+            'language_code' => $request->language_code, 
+            'country_code' => $request->country_code, 
+            'is_verified' => false, 
+            'remember_token' => false, 
+            'created_at' => Carbon::now()->timestamp, 
+            'updated_at' => Carbon::now()->timestamp
          ]);
 
-        $token = auth()->login($user);
-
-        return $this->respondWithToken($token);
+        return response()->json($user);
     }
 
     public function login() {
@@ -47,7 +47,7 @@ class AuthController extends Controller {
         return response()->json([
             'access_token' => $token,
             'token_type'   => 'bearer',
-            'expires_in'   => auth()->guard()->getTTL() * 60
+            'expires_in'   => auth('api')->factory()->getTTL() * 2
         ]);
     }
 }

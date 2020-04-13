@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable  implements JWTSubject
 {
@@ -17,7 +18,7 @@ class User extends Authenticatable  implements JWTSubject
      * @var array
      */
     protected $fillable = [
-        'email', 'password', 'firstname', 'lastname', 'mobile', 'uuid', 'country_code', 'language_code', 'access', 'is_verified'
+        'email', 'password', 'firstname', 'lastname', 'mobile', 'country_code', 'language_code', 'role_id', 'is_verified'
     ];
 
     /**
@@ -38,16 +39,15 @@ class User extends Authenticatable  implements JWTSubject
         'email_verified_at' => 'datetime',
     ];
 
+    public function roles()
+    {
+        return $this->hasMany('App\Models\UserRole', 'role_id');
+    }
+
     /**
      * JWTSubject
      *
      */
-
-    public function roles()
-    {
-        return $this->hasMany('App\Models\UserRole', 'uuid');
-    }
-
 
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.
@@ -75,4 +75,25 @@ class User extends Authenticatable  implements JWTSubject
             $this->attributes['password'] = bcrypt($password);
         }
     }  
+
+    // UUID
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($user) {
+            $user->{$user->getKeyName()} = (string) Str::uuid();
+        });
+    }
+
+    public function getIncrementing()
+    {
+        return false;
+    }
+
+    public function getKeyType()
+    {
+        return 'string';
+    }
 }

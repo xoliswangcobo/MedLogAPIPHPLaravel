@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,10 +19,19 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+// Health Check
+Route::get('/healthcheck', function () {
+    return response()->json([
+        'api_version' => 1.0,
+        'alive'   => 'Hell Yeah...',
+        'timestamp'  => Carbon::now()->timestamp
+    ]);
+});
+
 // Users - Auth
-Route::get('/users/login', 'AuthController@login');
-Route::get('/users/logout', 'AuthController@logout');
-Route::get('/users/register', 'AuthController@register');
+Route::post('/users/login', 'AuthController@login');
+Route::post('/users/logout', 'AuthController@logout');
+Route::post('/users/register', 'AuthController@register');
 
 // Users
 Route::get('/users/me', function() {});

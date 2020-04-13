@@ -25,6 +25,6 @@ class UserRole extends Model
      * @return mixed
      */
     public function user(){
-        return $this->belongsTo('App\Models\User', 'uuid');
+        return $this->belongsTo('App\Models\User', 'user_id');
     }
 }
