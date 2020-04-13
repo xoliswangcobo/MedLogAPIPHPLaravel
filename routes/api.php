@@ -32,9 +32,9 @@ Route::get('/healthcheck', function () {
 Route::post('/users/login', 'AuthController@login');
 Route::post('/users/logout', 'AuthController@logout');
 Route::post('/users/register', 'AuthController@register');
+Route::get('/users/me', 'AuthController@getAuthUser');
 
 // Users
-Route::get('/users/me', function() {});
 Route::get('/users', function(Request $request) {
     return $request->isJson() ? 'Yes' : 'No';
 });
