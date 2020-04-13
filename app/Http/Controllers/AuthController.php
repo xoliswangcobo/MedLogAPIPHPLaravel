@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 
 class AuthController extends Controller {
     public function register(Request $request) {
@@ -14,21 +15,25 @@ class AuthController extends Controller {
             return response()->json(['message' => 'Email already in use.'], 409);
         }
 
-        $user = User::create([
-            'firstname' => $request->firstname, 
-            'lastname' => $request->lastname, 
-            'mobile'   => $request->mobile,
-            'email'    => $request->email,
-            'email_verified_at' => $request->email_verified_at, 
-            'password' => $request->password,
-            'role_id'   => 1,
-            'language_code' => $request->language_code, 
-            'country_code' => $request->country_code, 
-            'is_verified' => false, 
-            'remember_token' => false, 
-            'created_at' => Carbon::now()->timestamp, 
-            'updated_at' => Carbon::now()->timestamp
-         ]);
+        try {
+            $user = User::create([
+                'firstname' => $request->firstname, 
+                'lastname' => $request->lastname, 
+                'mobile'   => $request->mobile,
+                'email'    => $request->email,
+                'email_verified_at' => $request->email_verified_at, 
+                'password' => $request->password,
+                'role_id'   => 1,
+                'language_code' => $request->language_code, 
+                'country_code' => $request->country_code, 
+                'is_verified' => false, 
+                'remember_token' => false, 
+                'created_at' => Carbon::now()->timestamp, 
+                'updated_at' => Carbon::now()->timestamp
+            ]);
+        } catch (QueryException $e) {
+            return response()->json(['message' => 'Can not register, please try again.', 'error' => $e], 500);
+        }
 
         return response()->json($user);
     }
