@@ -30,6 +30,7 @@ Route::get('/healthcheck', function () {
 
 // Users - Auth
 Route::post('/users/login', 'AuthController@login');
+Route::post('/users/reset', 'AuthController@passwordReset');
 Route::post('/users/logout', 'AuthController@logout');
 Route::post('/users/register', 'AuthController@register');
 Route::get('/users/me', 'AuthController@getAuthUser');
