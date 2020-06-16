@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\EmailSender;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Exception;
 
 class AuthController extends Controller {
     public function register(Request $request) {
@@ -66,7 +66,8 @@ class AuthController extends Controller {
         ]);
     }
 
-    public function passwordReset(Request $request) {
+    public function resetPassword(Request $request) {
+
         $user = User::where("email", $request->email)->first();
     
         if ($user == null) {
@@ -86,28 +87,25 @@ class AuthController extends Controller {
         //Generate, the password reset link. The token generated is embedded in the link
         $link = config('base_url') . 'password/reset/' . $tokenData . '?email=' . urlencode($user->email);
 
-        try {
-            //Here send the link with CURL with an external email API 
-            return true;
-        } catch (Exception $e) {
-            return false;
+        if (EmailSender::sendEmail("") == true) {
+            return response()->json(['success' => true,'message' => 'Password reset email sent successfully.']);
+        } else {
+            return response()->json(['success' => false,'message' => 'Failed to send password reset email, please try again.']);
         }
-
-        return response()->json(['success' => true,'message' => 'Password reset email sent successfully.']);
     }
 
-    public function resetPassword(Request $request) {
+    public function setPassword(Request $request) {
 
         //Validate input
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|exists:users,email',
-            'password' => 'required|confirmed'
-        ]);
+        // $validator = Validator::make($request->all(), [
+        //     'email' => 'required|exists:users,email',
+        //     'password' => 'required|confirmed'
+        // ]);
 
         //check if input is valid before moving on
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'message' => 'Required data insufficient.'], 400);
-        }
+        // if ($validator->fails()) {
+        //     return response()->json(['success' => false, 'message' => 'Required data insufficient.'], 400);
+        // }
 
         $password = $request->password;
 
