@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller {
+
     public function register(Request $request) {
         $user = User::where("email", $request->email)->first();
     
@@ -76,18 +77,19 @@ class AuthController extends Controller {
 
         // Create Password Reset Token
         DB::table('password_resets')->insert([
-            'email' => $request->email,
+            'id' => Str::uuid(),
+            'email' => $user->email,
             'token' => Str::random(60),
             'created_at' => Carbon::now()
         ]);
 
         //Get the token just created above
-        $tokenData = DB::table('password_resets')->where('email', $request->email)->first();
+        $tokenData = DB::table('password_resets')->where('email', $user->email)->first();
 
         //Generate, the password reset link. The token generated is embedded in the link
-        $link = config('base_url') . 'password/reset/' . $tokenData . '?email=' . urlencode($user->email);
+        $link = config('base_url') . 'password/reset/' . $tokenData->token . '?email=' . urlencode($user->email);
 
-        if (EmailSender::sendEmail("") == true) {
+        if (EmailSender::sendEmail($user->email, 'Medlog Password Reset', $link) == true) {
             return response()->json(['success' => true,'message' => 'Password reset email sent successfully.']);
         } else {
             return response()->json(['success' => false,'message' => 'Failed to send password reset email, please try again.']);
@@ -111,27 +113,38 @@ class AuthController extends Controller {
 
         // Validate the token
         $tokenData = DB::table('password_resets')->where('token', $request->token)->first();
+        if ($tokenData == null) {
+            return response()->json(['success' => false, 'message' => 'No valid user associated with token.'], 404);
+        }
 
-        // Redirect the user back to the password reset request form if the token is invalid
-        if (!$tokenData) return view('auth.passwords.email');
-
+        // Get user for email
         $user = User::where('email', $tokenData->email)->first();
         if ($user == null) {
             return response()->json(['success' => false, 'message' => 'Email not found.'], 404);
         }
 
+        // Check token expiry
+        $createdDate = Carbon::parse($tokenData->created_at);
+        $now = Carbon::now();
+
+        if ($now->timestamp - $createdDate->timestamp > 1200) {
+            // Delete the token
+            DB::table('password_resets')->where('email', $user->email)->delete();
+            return response()->json(['success' => false, 'message' => 'Token expired.'], 401);
+        }
+
         //Hash and update the new password
-        $user->password = Hash::make($password);
+        $user->password = $password;
         $user->update();
 
         // Delete the token
         DB::table('password_resets')->where('email', $user->email)->delete();
 
         //Send Email Reset Success Email
-        if ($this->sendSuccessEmail($tokenData->email)) {
-            return response()->json(['success' => false, 'message' => 'Password reset succesfully.'], 404);
+        if (EmailSender::sendEmail($user->email, 'Medlog Password Reset', 'Password was reset succesfully.') == true) {
+            return response()->json(['success' => false, 'message' => 'Password reset succesfully.'], 202);
         } else {
-            return response()->json(['success' => false, 'message' => 'Service error occured. Request may not have completed succesfully.'], 500);
+            return response()->json(['success' => false, 'message' => 'Password reset falied.'], 500);
         }
     }
 
